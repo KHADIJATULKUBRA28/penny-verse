@@ -238,7 +238,7 @@ const FinZen = () => {
       
       toast({
         title: "Transaction Added",
-        description: `${transactionType === "income" ? "Income" : "Expense"} of ₹${amount} recorded`,
+        description: `${transactionType === "income" ? "Income" : "Expense"} of Z${amount} recorded`,
       });
     } catch (error) {
       console.error("Error adding transaction:", error);
@@ -413,10 +413,10 @@ const FinZen = () => {
     const topCategories = getCategoryBreakdown().slice(0, 3);
 
     const prompt = `You are a non-judgmental financial coach. Based on this user data:
-    - Current Balance: ₹${balance.toFixed(2)}
-    - Total Expenses: ₹${totalExpense.toFixed(2)}
+    - Current Balance: Z${balance.toFixed(2)}
+    - Total Expenses: Z${totalExpense.toFixed(2)}
     - Savings Streak: ${rewards.streak} days
-    - Top Expense Categories: ${topCategories.map(([cat, amt]) => `${cat} (₹${amt})`).join(", ")}
+    - Top Expense Categories: ${topCategories.map(([cat, amt]) => `${cat} (Z${amt})`).join(", ")}
     
     Provide concise, actionable financial advice in 3-4 sentences.`;
 
@@ -517,7 +517,7 @@ const FinZen = () => {
                     <div>
                       <p className="font-semibold text-warning">Subscription Renewal</p>
                       <p className="text-sm text-muted-foreground">
-                        {sub.name} (₹{sub.cost}) renews on {sub.renewalDate.toLocaleDateString()}
+                        {sub.name} (Z{sub.cost}) renews on {sub.renewalDate.toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -537,7 +537,7 @@ const FinZen = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-primary">₹{balance.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-primary">Z{balance.toFixed(2)}</p>
             </CardContent>
           </Card>
 
@@ -549,7 +549,7 @@ const FinZen = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-destructive">₹{totalExpense.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-destructive">Z{totalExpense.toFixed(2)}</p>
             </CardContent>
           </Card>
 
@@ -588,7 +588,7 @@ const FinZen = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <Input
                 type="number"
-                placeholder="Amount"
+                placeholder="Amount (Zcoins)"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />
@@ -639,7 +639,7 @@ const FinZen = () => {
                     <div key={category} className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium">{category}</span>
-                        <span className="text-muted-foreground">₹{amount.toFixed(2)}</span>
+                        <span className="text-muted-foreground">Z{amount.toFixed(2)}</span>
                       </div>
                       <div className="h-3 bg-muted rounded-full overflow-hidden">
                         <div
@@ -674,7 +674,7 @@ const FinZen = () => {
                 />
                 <Input
                   type="number"
-                  placeholder="Monthly Cost"
+                  placeholder="Monthly Cost (Zcoins)"
                   value={subCost}
                   onChange={(e) => setSubCost(e.target.value)}
                 />
@@ -710,7 +710,7 @@ const FinZen = () => {
                             Renews: {sub.renewalDate.toLocaleDateString()}
                           </p>
                         </div>
-                        <p className="font-bold text-lg">₹{sub.cost}</p>
+                        <p className="font-bold text-lg">Z{sub.cost}</p>
                       </div>
                       {isUpcoming && (
                         <Badge variant="outline" className="mt-2 border-warning text-warning">
@@ -802,7 +802,7 @@ const FinZen = () => {
                         txn.type === "income" ? "text-success" : "text-destructive"
                       }`}
                     >
-                      {txn.type === "income" ? "+" : "-"}₹{txn.amount.toFixed(2)}
+                      {txn.type === "income" ? "+" : "-"}Z{txn.amount.toFixed(2)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {txn.timestamp.toDate().toLocaleDateString()}
