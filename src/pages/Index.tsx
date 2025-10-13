@@ -1,28 +1,12 @@
 import { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  signInWithCustomToken,
-  signInAnonymously,
-  onAuthStateChanged,
-} from "firebase/auth";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  Timestamp,
-  doc,
-  setDoc,
-  getDoc,
-} from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import TransactionScanner from "@/components/TransactionScanner";
 import {
   Wallet,
   TrendingDown,
@@ -33,49 +17,41 @@ import {
   AlertCircle,
   Loader2,
   Plus,
-  DollarSign,
+  LogOut,
 } from "lucide-react";
 
 // Type definitions
 interface Transaction {
-  id?: string;
+  id: string;
   amount: number;
   description: string;
   type: "expense" | "income";
   category: string;
-  timestamp: Timestamp;
+  created_at: string;
 }
 
 interface Subscription {
-  id?: string;
+  id: string;
   name: string;
   cost: number;
-  renewalDate: Date;
+  renewal_date: string;
 }
 
 interface Rewards {
   points: number;
   streak: number;
-  lastUpdate: Date;
-}
-
-// Global Firebase configuration (provided by user)
-declare global {
-  interface Window {
-    __app_id?: string;
-    __firebase_config?: any;
-    __initial_auth_token?: string;
-  }
+  last_update: string;
 }
 
 const FinZen = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // State management
   const [userId, setUserId] = useState<string>("");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [rewards, setRewards] = useState<Rewards>({ points: 0, streak: 0, lastUpdate: new Date() });
+  const [rewards, setRewards] = useState<Rewards>({ points: 0, streak: 0, last_update: new Date().toISOString() });
   
   // Form states
   const [amount, setAmount] = useState("");
@@ -88,99 +64,61 @@ const FinZen = () => {
   // AI states
   const [aiAdvice, setAiAdvice] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
-  
-  // Firebase instances
-  const [db, setDb] = useState<any>(null);
-  const [auth, setAuth] = useState<any>(null);
 
-  // Initialize Firebase
+  // Check authentication
   useEffect(() => {
-    const initFirebase = async () => {
-      try {
-        const appId = window.__app_id || "finzen-app";
-        const firebaseConfig = window.__firebase_config || {
-          apiKey: "demo-api-key",
-          authDomain: "demo.firebaseapp.com",
-          projectId: "demo-project",
-        };
-
-        const app = initializeApp(firebaseConfig, appId);
-        const authInstance = getAuth(app);
-        const dbInstance = getFirestore(app);
-
-        setAuth(authInstance);
-        setDb(dbInstance);
-
-        // Authenticate user
-        if (window.__initial_auth_token) {
-          await signInWithCustomToken(authInstance, window.__initial_auth_token);
-        } else {
-          await signInAnonymously(authInstance);
-        }
-
-        // Listen to auth state
-        onAuthStateChanged(authInstance, (user) => {
-          if (user) {
-            setUserId(user.uid);
-            setupListeners(dbInstance, user.uid, appId);
-          }
-        });
-      } catch (error) {
-        console.error("Firebase initialization error:", error);
-        toast({
-          title: "Connection Error",
-          description: "Failed to connect to Firebase. Using demo mode.",
-          variant: "destructive",
-        });
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
       }
+      setUserId(session.user.id);
+      fetchData(session.user.id);
     };
 
-    initFirebase();
-  }, []);
+    checkAuth();
 
-  // Setup Firestore listeners
-  const setupListeners = (dbInstance: any, uid: string, appId: string) => {
-    const basePath = `artifacts/${appId}/users/${uid}`;
-
-    // Transactions listener
-    const transactionsRef = collection(dbInstance, `${basePath}/transactions`);
-    const transactionsQuery = query(transactionsRef, orderBy("timestamp", "desc"));
-    onSnapshot(transactionsQuery, (snapshot) => {
-      const txns: Transaction[] = [];
-      snapshot.forEach((doc) => {
-        txns.push({ id: doc.id, ...doc.data() } as Transaction);
-      });
-      setTransactions(txns);
-    });
-
-    // Subscriptions listener
-    const subscriptionsRef = collection(dbInstance, `${basePath}/subscriptions`);
-    onSnapshot(subscriptionsRef, (snapshot) => {
-      const subs: Subscription[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        subs.push({
-          id: doc.id,
-          name: data.name,
-          cost: data.cost,
-          renewalDate: data.renewalDate.toDate(),
-        });
-      });
-      setSubscriptions(subs);
-    });
-
-    // Rewards listener
-    const rewardsRef = doc(dbInstance, `${basePath}/rewards/data`);
-    onSnapshot(rewardsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        setRewards({
-          points: data.points || 0,
-          streak: data.streak || 0,
-          lastUpdate: data.lastUpdate?.toDate() || new Date(),
-        });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        navigate("/auth");
+      } else if (session) {
+        setUserId(session.user.id);
+        fetchData(session.user.id);
       }
     });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  // Fetch data
+  const fetchData = async (uid: string) => {
+    // Fetch transactions
+    const { data: txData } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+    if (txData) setTransactions(txData as Transaction[]);
+
+    // Fetch subscriptions
+    const { data: subData } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", uid);
+    if (subData) setSubscriptions(subData);
+
+    // Fetch rewards
+    const { data: rewardsData } = await supabase
+      .from("rewards")
+      .select("*")
+      .eq("user_id", uid)
+      .single();
+    if (rewardsData) setRewards(rewardsData);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   // AI categorization function
@@ -209,7 +147,7 @@ const FinZen = () => {
 
   // Add transaction
   const handleAddTransaction = async () => {
-    if (!amount || !description || !db || !userId) {
+    if (!amount || !description || !userId) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
@@ -219,16 +157,15 @@ const FinZen = () => {
     }
 
     try {
-      const appId = window.__app_id || "finzen-app";
-      const transactionsRef = collection(db, `artifacts/${appId}/users/${userId}/transactions`);
-      
-      await addDoc(transactionsRef, {
+      const { error } = await supabase.from("transactions").insert({
+        user_id: userId,
         amount: parseFloat(amount),
         description,
         type: transactionType,
         category: transactionType === "income" ? "Income" : getCategory(description),
-        timestamp: Timestamp.now(),
       });
+
+      if (error) throw error;
 
       // Update streak and rewards
       await updateStreak();
@@ -240,7 +177,9 @@ const FinZen = () => {
         title: "Transaction Added",
         description: `${transactionType === "income" ? "Income" : "Expense"} of Z${amount} recorded`,
       });
-    } catch (error) {
+      
+      fetchData(userId);
+    } catch (error: any) {
       console.error("Error adding transaction:", error);
       toast({
         title: "Error",
@@ -250,9 +189,17 @@ const FinZen = () => {
     }
   };
 
+  // Handle transaction from scanner
+  const handleScannerTransaction = (amt: string, desc: string, txnType: "expense" | "income") => {
+    setAmount(amt);
+    setDescription(desc);
+    setTransactionType(txnType);
+    setTimeout(() => handleAddTransaction(), 100);
+  };
+
   // Add subscription
   const handleAddSubscription = async () => {
-    if (!subName || !subCost || !subDate || !db || !userId) {
+    if (!subName || !subCost || !subDate || !userId) {
       toast({
         title: "Missing Information",
         description: "Please fill in all subscription fields",
@@ -262,14 +209,14 @@ const FinZen = () => {
     }
 
     try {
-      const appId = window.__app_id || "finzen-app";
-      const subscriptionsRef = collection(db, `artifacts/${appId}/users/${userId}/subscriptions`);
-      
-      await addDoc(subscriptionsRef, {
+      const { error } = await supabase.from("subscriptions").insert({
+        user_id: userId,
         name: subName,
         cost: parseFloat(subCost),
-        renewalDate: Timestamp.fromDate(new Date(subDate)),
+        renewal_date: subDate,
       });
+
+      if (error) throw error;
 
       setSubName("");
       setSubCost("");
@@ -279,7 +226,9 @@ const FinZen = () => {
         title: "Subscription Added",
         description: `${subName} subscription tracked successfully`,
       });
-    } catch (error) {
+      
+      fetchData(userId);
+    } catch (error: any) {
       console.error("Error adding subscription:", error);
       toast({
         title: "Error",
@@ -291,13 +240,13 @@ const FinZen = () => {
 
   // Update streak logic
   const updateStreak = async () => {
-    if (!db || !userId) return;
+    if (!userId) return;
 
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const lastUpdate = new Date(rewards.lastUpdate);
+      const lastUpdate = new Date(rewards.last_update);
       lastUpdate.setHours(0, 0, 0, 0);
 
       const daysDiff = Math.floor((today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
@@ -307,14 +256,11 @@ const FinZen = () => {
         const newStreak = dailyBalance >= 0 ? rewards.streak + 1 : 0;
         const newPoints = dailyBalance >= 0 ? rewards.points + 10 : rewards.points;
 
-        const appId = window.__app_id || "finzen-app";
-        const rewardsRef = doc(db, `artifacts/${appId}/users/${userId}/rewards/data`);
-        
-        await setDoc(rewardsRef, {
+        await supabase.from("rewards").update({
           points: newPoints,
           streak: newStreak,
-          lastUpdate: Timestamp.now(),
-        });
+          last_update: new Date().toISOString(),
+        }).eq("user_id", userId);
       }
     } catch (error) {
       console.error("Error updating streak:", error);
@@ -327,7 +273,7 @@ const FinZen = () => {
     today.setHours(0, 0, 0, 0);
 
     const todayTransactions = transactions.filter((t) => {
-      const txnDate = t.timestamp.toDate();
+      const txnDate = new Date(t.created_at);
       txnDate.setHours(0, 0, 0, 0);
       return txnDate.getTime() === today.getTime();
     });
@@ -366,14 +312,14 @@ const FinZen = () => {
   // Check spending alert
   const checkSpendingAlert = (): boolean => {
     const last7Days = transactions.filter((t) => {
-      const daysDiff = (Date.now() - t.timestamp.toMillis()) / (1000 * 60 * 60 * 24);
+      const daysDiff = (Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24);
       return daysDiff <= 7 && t.type === "expense";
     });
 
     const last7DaysExpense = last7Days.reduce((sum, t) => sum + t.amount, 0);
     
     const olderTransactions = transactions.filter((t) => {
-      const daysDiff = (Date.now() - t.timestamp.toMillis()) / (1000 * 60 * 60 * 24);
+      const daysDiff = (Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24);
       return daysDiff > 7 && t.type === "expense";
     });
 
@@ -389,7 +335,7 @@ const FinZen = () => {
   const getUpcomingSubscriptions = () => {
     return subscriptions.filter((sub) => {
       const daysUntilRenewal = Math.floor(
-        (sub.renewalDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        (new Date(sub.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
       );
       return daysUntilRenewal <= 7 && daysUntilRenewal >= 0;
     });
@@ -482,9 +428,14 @@ const FinZen = () => {
               </div>
             </div>
             {userId && (
-              <Badge variant="secondary" className="text-xs">
-                User: {userId.slice(0, 8)}...
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  User: {userId.slice(0, 8)}...
+                </Badge>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -517,7 +468,7 @@ const FinZen = () => {
                     <div>
                       <p className="font-semibold text-warning">Subscription Renewal</p>
                       <p className="text-sm text-muted-foreground">
-                        {sub.name} (Z{sub.cost}) renews on {sub.renewalDate.toLocaleDateString()}
+                        {sub.name} (Z{sub.cost}) renews on {new Date(sub.renewal_date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -528,7 +479,8 @@ const FinZen = () => {
         )}
 
         {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {transactions.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -574,6 +526,7 @@ const FinZen = () => {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* Transaction Form */}
         <Card className="mb-8 shadow-md">
@@ -619,6 +572,7 @@ const FinZen = () => {
             <Button onClick={handleAddTransaction} className="w-full mt-4">
               Add Transaction
             </Button>
+            <TransactionScanner onTransaction={handleScannerTransaction} />
           </CardContent>
         </Card>
 
@@ -692,7 +646,7 @@ const FinZen = () => {
               <div className="space-y-3 mt-6">
                 {subscriptions.map((sub) => {
                   const daysUntilRenewal = Math.floor(
-                    (sub.renewalDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                    (new Date(sub.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
                   );
                   const isUpcoming = daysUntilRenewal <= 7 && daysUntilRenewal >= 0;
 
@@ -707,7 +661,7 @@ const FinZen = () => {
                         <div>
                           <p className="font-semibold">{sub.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            Renews: {sub.renewalDate.toLocaleDateString()}
+                            Renews: {new Date(sub.renewal_date).toLocaleDateString()}
                           </p>
                         </div>
                         <p className="font-bold text-lg">Z{sub.cost}</p>
@@ -805,7 +759,7 @@ const FinZen = () => {
                       {txn.type === "income" ? "+" : "-"}Z{txn.amount.toFixed(2)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {txn.timestamp.toDate().toLocaleDateString()}
+                      {new Date(txn.created_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
