@@ -27,6 +27,11 @@ const TransactionScanner = ({ onTransaction }: TransactionScannerProps) => {
       return;
     }
     
+    toast({
+      title: "Payment Sent! 🎉",
+      description: `Z${amount} sent to ${phoneNumber}`,
+    });
+    
     onTransaction(amount, description || `Payment to ${phoneNumber}`, "expense");
     setOpen(false);
     setPhoneNumber("");

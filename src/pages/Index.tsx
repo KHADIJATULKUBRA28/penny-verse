@@ -349,8 +349,8 @@ const FinZen = () => {
     return null;
   };
 
-  // Get AI advice with exponential backoff
-  const getAIAdvice = async (retries = 3) => {
+  // Get AI advice
+  const getAIAdvice = async () => {
     setLoadingAI(true);
     setAiAdvice("");
 
@@ -358,53 +358,33 @@ const FinZen = () => {
     const totalExpense = calculateTotalExpense();
     const topCategories = getCategoryBreakdown().slice(0, 3);
 
-    const prompt = `You are a non-judgmental financial coach. Based on this user data:
-    - Current Balance: Z${balance.toFixed(2)}
-    - Total Expenses: Z${totalExpense.toFixed(2)}
-    - Savings Streak: ${rewards.streak} days
-    - Top Expense Categories: ${topCategories.map(([cat, amt]) => `${cat} (Z${amt})`).join(", ")}
-    
-    Provide concise, actionable financial advice in 3-4 sentences.`;
+    try {
+      const { data, error } = await supabase.functions.invoke("financial-advice", {
+        body: {
+          balance: balance.toFixed(2),
+          totalExpense: totalExpense.toFixed(2),
+          streak: rewards.streak,
+          topCategories,
+        },
+      });
 
-    for (let attempt = 0; attempt < retries; attempt++) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyDSh31QTfN0p5fNxPTXF-l32xH8gkPZt6M`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 200,
-              },
-            }),
-          }
-        );
+      if (error) throw error;
 
-        if (!response.ok) throw new Error("API request failed");
-
-        const data = await response.json();
-        const advice = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to generate advice at this time.";
-        
-        setAiAdvice(advice);
-        setLoadingAI(false);
-        return;
-      } catch (error) {
-        if (attempt < retries - 1) {
-          await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-        } else {
-          console.error("AI advice error:", error);
-          toast({
-            title: "AI Error",
-            description: "Unable to fetch personalized advice. Please try again later.",
-            variant: "destructive",
-          });
-        }
+      if (data?.advice) {
+        setAiAdvice(data.advice);
+      } else {
+        throw new Error("No advice received");
       }
+    } catch (error: any) {
+      console.error("AI advice error:", error);
+      toast({
+        title: "AI Error",
+        description: error.message || "Unable to fetch personalized advice. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAI(false);
     }
-    setLoadingAI(false);
   };
 
   const balance = calculateBalance();
