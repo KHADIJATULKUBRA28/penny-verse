@@ -38,6 +38,42 @@ export type Database = {
         }
         Relationships: []
       }
+      savings_goals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_amount: number
+          deadline: string
+          emoji: string | null
+          id: string
+          target_amount: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_amount?: number
+          deadline: string
+          emoji?: string | null
+          id?: string
+          target_amount: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_amount?: number
+          deadline?: string
+          emoji?: string | null
+          id?: string
+          target_amount?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cost: number

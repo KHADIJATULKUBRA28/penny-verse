@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import TransactionScanner from "@/components/TransactionScanner";
+import SavingsGoalComponent from "@/components/SavingsGoal";
+import ExpensePieChart from "@/components/ExpensePieChart";
+import StreakBadges from "@/components/StreakBadges";
 import {
   Wallet,
   TrendingDown,
@@ -43,6 +46,18 @@ interface Rewards {
   last_update: string;
 }
 
+interface SavingsGoal {
+  id: string;
+  user_id: string;
+  title: string;
+  target_amount: number;
+  current_amount: number;
+  deadline: string;
+  emoji: string;
+  created_at: string;
+  completed_at: string | null;
+}
+
 const FinZen = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -52,6 +67,7 @@ const FinZen = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [rewards, setRewards] = useState<Rewards>({ points: 0, streak: 0, last_update: new Date().toISOString() });
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   
   // Form states
   const [amount, setAmount] = useState("");
@@ -115,6 +131,14 @@ const FinZen = () => {
       .eq("user_id", uid)
       .single();
     if (rewardsData) setRewards(rewardsData);
+
+    // Fetch savings goals
+    const { data: goalsData } = await supabase
+      .from("savings_goals")
+      .select("*")
+      .eq("user_id", uid)
+      .order("deadline", { ascending: true });
+    if (goalsData) setSavingsGoals(goalsData);
   };
 
   const handleLogout = async () => {
@@ -233,6 +257,100 @@ const FinZen = () => {
       toast({
         title: "Error",
         description: "Failed to add subscription",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Savings Goals handlers
+  const handleAddGoal = async (goal: { title: string; target_amount: number; deadline: string; emoji: string }) => {
+    if (!userId) return;
+
+    try {
+      const { error } = await supabase.from("savings_goals").insert({
+        user_id: userId,
+        ...goal,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Goal Created! 🎯",
+        description: `${goal.emoji} ${goal.title} - Let's make it happen!`,
+      });
+
+      fetchData(userId);
+    } catch (error: any) {
+      console.error("Error adding goal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create savings goal",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteGoal = async (goalId: string) => {
+    try {
+      const { error } = await supabase
+        .from("savings_goals")
+        .delete()
+        .eq("id", goalId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Goal Deleted",
+        description: "Savings goal removed",
+      });
+
+      fetchData(userId);
+    } catch (error: any) {
+      console.error("Error deleting goal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete goal",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateGoal = async (goalId: string, addedAmount: number) => {
+    const goal = savingsGoals.find(g => g.id === goalId);
+    if (!goal) return;
+
+    const newAmount = goal.current_amount + addedAmount;
+    const completed = newAmount >= goal.target_amount;
+
+    try {
+      const { error } = await supabase
+        .from("savings_goals")
+        .update({
+          current_amount: newAmount,
+          completed_at: completed ? new Date().toISOString() : null,
+        })
+        .eq("id", goalId);
+
+      if (error) throw error;
+
+      if (completed) {
+        toast({
+          title: "🎉 Goal Achieved!",
+          description: `Congratulations! You've reached your ${goal.emoji} ${goal.title} goal!`,
+        });
+      } else {
+        toast({
+          title: "Progress Updated! 💪",
+          description: `Added Z${addedAmount} to ${goal.title}`,
+        });
+      }
+
+      fetchData(userId);
+    } catch (error: any) {
+      console.error("Error updating goal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update goal",
         variant: "destructive",
       });
     }
@@ -557,8 +675,24 @@ const FinZen = () => {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Pie Chart */}
+          <ExpensePieChart categoryBreakdown={categoryBreakdown} />
+
+          {/* Streak Badges */}
+          <StreakBadges streak={rewards.streak} points={rewards.points} />
+
+          {/* Savings Goals */}
+          <div className="lg:col-span-2">
+            <SavingsGoalComponent
+              goals={savingsGoals}
+              onAddGoal={handleAddGoal}
+              onDeleteGoal={handleDeleteGoal}
+              onUpdateGoal={handleUpdateGoal}
+            />
+          </div>
+
           {/* Expense Breakdown */}
-          <Card className="shadow-md">
+          <Card className="shadow-md lg:col-span-2">
             <CardHeader>
               <CardTitle>Top Expense Categories</CardTitle>
               <CardDescription>Your spending breakdown</CardDescription>
