@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
-interface SavingsGoal {
+export interface SavingsGoal {
   id: string;
   title: string;
   target_amount: number;
