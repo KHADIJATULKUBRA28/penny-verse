@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,17 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/");
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,8 +71,8 @@ const Auth = () => {
           <div className="flex items-center justify-center gap-3 mb-4">
             <Wallet className="w-10 h-10 text-primary" />
             <div>
-              <CardTitle className="text-3xl">FinZen</CardTitle>
-              <CardDescription>Smart UPI Assistant</CardDescription>
+              <CardTitle className="text-3xl">FinTrack</CardTitle>
+              <CardDescription>Smart Money Management</CardDescription>
             </div>
           </div>
         </CardHeader>

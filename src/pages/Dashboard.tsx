@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wallet, TrendingUp, TrendingDown, User, Trophy, Target } from "lucide-react";
+import { Wallet, Trophy, Target, User } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import ExpensePieChart from "@/components/ExpensePieChart";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -102,7 +101,7 @@ const Dashboard = () => {
       </div>
 
       <div className="container max-w-2xl mx-auto px-6 -mt-8">
-        {/* Balance Card */}
+        {/* Balance Card with Transaction Button */}
         <Card className="mb-6 shadow-lg">
           <CardContent className="pt-6">
             <div className="text-center">
@@ -111,7 +110,14 @@ const Dashboard = () => {
                 <Wallet className="w-8 h-8 text-primary" />
                 <p className="text-5xl font-bold">Z{balance.toFixed(2)}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
+              <Button 
+                onClick={() => navigate("/transactions")} 
+                className="w-full mb-4"
+                size="lg"
+              >
+                + Add Transaction
+              </Button>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="text-left">
                   <p className="text-xs text-muted-foreground">Income</p>
                   <p className="text-xl font-semibold text-success">+Z{income.toFixed(2)}</p>
@@ -154,10 +160,40 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Pie Chart */}
+        {/* Pie Chart - Minimized */}
         {categoryBreakdown.length > 0 && (
           <div className="mb-6">
-            <ExpensePieChart categoryBreakdown={categoryBreakdown} />
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Expense Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {categoryBreakdown.slice(0, 3).map(([category, amount]) => {
+                    const total = categoryBreakdown.reduce((sum, [, amt]) => sum + amt, 0);
+                    const percentage = ((amount / total) * 100).toFixed(0);
+                    return (
+                      <div key={category} className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{category}</span>
+                        <span className="text-muted-foreground">
+                          {percentage}% (Z{amount.toFixed(2)})
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {categoryBreakdown.length > 3 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full mt-2" 
+                      onClick={() => navigate("/insights")}
+                    >
+                      View All Categories
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>

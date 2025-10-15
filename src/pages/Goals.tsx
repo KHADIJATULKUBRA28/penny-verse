@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SavingsGoalComponent, { SavingsGoal } from "@/components/SavingsGoal";
@@ -6,15 +7,25 @@ import StreakBadges from "@/components/StreakBadges";
 import BottomNav from "@/components/BottomNav";
 
 const Goals = () => {
+  const navigate = useNavigate();
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   const [streak, setStreak] = useState(0);
   const [points, setPoints] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchGoals();
-    fetchRewards();
-  }, []);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      fetchGoals();
+      fetchRewards();
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const fetchGoals = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -81,13 +92,23 @@ const Goals = () => {
     }
   };
 
-  const handleUpdateGoal = async (id: string, amount: number) => {
+  const handleUpdateGoal = async (id: string, addedAmount: number) => {
+    // Get the current goal to add to its existing amount
+    const goal = savingsGoals.find(g => g.id === id);
+    if (!goal) return;
+
+    const newAmount = goal.current_amount + addedAmount;
+    
     const { error } = await supabase
       .from("savings_goals")
-      .update({ current_amount: amount })
+      .update({ current_amount: newAmount })
       .eq("id", id);
 
     if (!error) {
+      toast({ 
+        title: "Progress updated! 💪",
+        description: `Added Z${addedAmount} to ${goal.title}`
+      });
       fetchGoals();
     }
   };

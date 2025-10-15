@@ -9,6 +9,7 @@ import Transactions from "./pages/Transactions";
 import Insights from "./pages/Insights";
 import Goals from "./pages/Goals";
 import AIAssistant from "./pages/AIAssistant";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/insights" element={<Insights />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/ai-assistant" element={<AIAssistant />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ExpensePieChart from "@/components/ExpensePieChart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,14 +7,24 @@ import { TrendingDown, TrendingUp, DollarSign } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 
 const Insights = () => {
+  const navigate = useNavigate();
   const [categoryBreakdown, setCategoryBreakdown] = useState<[string, number][]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalIncome, setTotalIncome] = useState(0);
   const [insights, setInsights] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchAnalytics();
-  }, []);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      fetchAnalytics();
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const fetchAnalytics = async () => {
     const { data: { user } } = await supabase.auth.getUser();

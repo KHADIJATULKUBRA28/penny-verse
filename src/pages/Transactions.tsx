@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +31,7 @@ interface Transaction {
 }
 
 const Transactions = () => {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -39,8 +41,17 @@ const Transactions = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      fetchTransactions();
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const fetchTransactions = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -59,7 +70,7 @@ const Transactions = () => {
     }
   };
 
-  const addTransaction = async () => {
+  const handleAddTransaction = async () => {
     if (!amount || !category) {
       toast({ title: "Please fill all fields", variant: "destructive" });
       return;
@@ -79,12 +90,72 @@ const Transactions = () => {
     if (error) {
       toast({ title: "Error adding transaction", variant: "destructive" });
     } else {
+      // Update streak if it's a saving transaction
+      if (type === "income") {
+        await updateStreak(user.id);
+      }
+      
       toast({ title: "Transaction added successfully!" });
       setAmount("");
       setDescription("");
       setCategory("");
       setIsOpen(false);
       fetchTransactions();
+    }
+  };
+
+  const updateStreak = async (userId: string) => {
+    try {
+      // Get current rewards
+      const { data: currentRewards } = await supabase
+        .from("rewards")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
+      if (!currentRewards) {
+        // Create rewards entry if it doesn't exist
+        await supabase.from("rewards").insert({
+          user_id: userId,
+          points: 10,
+          streak: 1,
+          last_update: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if last update was yesterday or earlier
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const lastUpdate = new Date(currentRewards.last_update);
+      lastUpdate.setHours(0, 0, 0, 0);
+      
+      const daysDiff = Math.floor((today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysDiff === 1) {
+        // Continue streak
+        await supabase.from("rewards").update({
+          points: currentRewards.points + 10,
+          streak: currentRewards.streak + 1,
+          last_update: new Date().toISOString(),
+        }).eq("user_id", userId);
+      } else if (daysDiff > 1) {
+        // Streak broken, reset
+        await supabase.from("rewards").update({
+          points: currentRewards.points + 10,
+          streak: 1,
+          last_update: new Date().toISOString(),
+        }).eq("user_id", userId);
+      } else if (daysDiff === 0) {
+        // Same day, just add points
+        await supabase.from("rewards").update({
+          points: currentRewards.points + 5,
+          last_update: new Date().toISOString(),
+        }).eq("user_id", userId);
+      }
+    } catch (error) {
+      console.error("Error updating streak:", error);
     }
   };
 
@@ -166,7 +237,7 @@ const Transactions = () => {
                   />
                 </div>
 
-                <Button onClick={addTransaction} className="w-full">
+                <Button onClick={handleAddTransaction} className="w-full">
                   Add Transaction
                 </Button>
               </div>
