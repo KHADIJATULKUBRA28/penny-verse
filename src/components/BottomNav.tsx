@@ -5,9 +5,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Receipt, label: "Transactions", path: "/transactions" },
-  { icon: BarChart3, label: "Insights", path: "/insights" },
-  { icon: Target, label: "Goals", path: "/goals" },
-  { icon: Bot, label: "AI Assistant", path: "/ai-assistant" },
+  { icon: BarChart3, label: "Expenses", path: "/insights" },
+  { icon: Target, label: "Vaults", path: "/vaults" },
 ];
 
 const BottomNav = () => {

@@ -18,7 +18,7 @@ const AIAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm your financial assistant. Ask me anything about your spending, savings, or get personalized advice! 💰",
+      content: "Hi! I'm Penny, your AI financial coach! 🤖💰 Ask me anything about your spending, savings, or get personalized tips to reach your goals faster!",
     },
   ]);
   const [input, setInput] = useState("");
@@ -74,8 +74,8 @@ const AIAssistant = () => {
             <Bot className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">AI Assistant</h1>
-            <p className="text-sm text-muted-foreground">Your personal finance advisor</p>
+            <h1 className="text-2xl font-bold">Meet Penny</h1>
+            <p className="text-sm text-muted-foreground">Your AI Financial Coach</p>
           </div>
         </div>
 

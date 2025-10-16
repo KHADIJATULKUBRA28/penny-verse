@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Transactions from "./pages/Transactions";
 import Insights from "./pages/Insights";
 import Goals from "./pages/Goals";
+import Vaults from "./pages/Vaults";
 import AIAssistant from "./pages/AIAssistant";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/goals" element={<Goals />} />
+          <Route path="/vaults" element={<Vaults />} />
           <Route path="/ai-assistant" element={<AIAssistant />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />

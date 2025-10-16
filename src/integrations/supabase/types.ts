@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      goal_vaults: {
+        Row: {
+          broken_at: string | null
+          created_at: string
+          daily_save_amount: number
+          emoji: string | null
+          goal_name: string
+          id: string
+          is_broken: boolean
+          is_locked: boolean
+          last_save_date: string | null
+          saved_amount: number
+          streak_days: number
+          target_amount: number
+          user_id: string
+        }
+        Insert: {
+          broken_at?: string | null
+          created_at?: string
+          daily_save_amount: number
+          emoji?: string | null
+          goal_name: string
+          id?: string
+          is_broken?: boolean
+          is_locked?: boolean
+          last_save_date?: string | null
+          saved_amount?: number
+          streak_days?: number
+          target_amount: number
+          user_id: string
+        }
+        Update: {
+          broken_at?: string | null
+          created_at?: string
+          daily_save_amount?: number
+          emoji?: string | null
+          goal_name?: string
+          id?: string
+          is_broken?: boolean
+          is_locked?: boolean
+          last_save_date?: string | null
+          saved_amount?: number
+          streak_days?: number
+          target_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          updated_at: string
+          upi_id: string | null
+          wallet_balance: number
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          name?: string | null
+          updated_at?: string
+          upi_id?: string | null
+          wallet_balance?: number
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          updated_at?: string
+          upi_id?: string | null
+          wallet_balance?: number
+        }
+        Relationships: []
+      }
       rewards: {
         Row: {
           id: string
@@ -107,8 +185,12 @@ export type Database = {
           category: string
           created_at: string
           description: string
+          from_upi: string | null
           id: string
+          to_upi: string | null
+          transaction_type: string | null
           type: string
+          upi_ref_id: string | null
           user_id: string
         }
         Insert: {
@@ -116,8 +198,12 @@ export type Database = {
           category: string
           created_at?: string
           description: string
+          from_upi?: string | null
           id?: string
+          to_upi?: string | null
+          transaction_type?: string | null
           type: string
+          upi_ref_id?: string | null
           user_id: string
         }
         Update: {
@@ -125,8 +211,12 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string
+          from_upi?: string | null
           id?: string
+          to_upi?: string | null
+          transaction_type?: string | null
           type?: string
+          upi_ref_id?: string | null
           user_id?: string
         }
         Relationships: []

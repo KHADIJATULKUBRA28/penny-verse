@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wallet, Trophy, Target, User } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import FloatingPenny from "@/components/FloatingPenny";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [balance, setBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [upiId, setUpiId] = useState("");
   const [income, setIncome] = useState(0);
   const [expenses, setExpenses] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -30,6 +32,18 @@ const Dashboard = () => {
   }, [navigate]);
 
   const fetchDashboardData = async (userId: string) => {
+    // Fetch profile with wallet balance and UPI ID
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("wallet_balance, upi_id")
+      .eq("id", userId)
+      .single();
+
+    if (profileData) {
+      setWalletBalance(profileData.wallet_balance || 0);
+      setUpiId(profileData.upi_id || "");
+    }
+
     // Fetch transactions
     const { data: txData } = await supabase
       .from("transactions")
@@ -46,7 +60,6 @@ const Dashboard = () => {
 
       setIncome(totalIncome);
       setExpenses(totalExpenses);
-      setBalance(totalIncome - totalExpenses);
 
       // Category breakdown
       const breakdown: Record<string, number> = {};
@@ -70,14 +83,14 @@ const Dashboard = () => {
       setPoints(rewardsData.points);
     }
 
-    // Fetch active goals
-    const { data: goalsData } = await supabase
-      .from("savings_goals")
+    // Fetch active vaults
+    const { data: vaultsData } = await supabase
+      .from("goal_vaults")
       .select("id")
       .eq("user_id", userId)
-      .is("completed_at", null);
+      .eq("is_broken", false);
 
-    setActiveGoals(goalsData?.length || 0);
+    setActiveGoals(vaultsData?.length || 0);
   };
 
   return (
@@ -86,8 +99,8 @@ const Dashboard = () => {
       <div className="bg-gradient-to-r from-primary to-secondary text-primary-foreground p-6">
         <div className="container max-w-2xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-1">FinTrack</h1>
-            <p className="text-sm opacity-90">Your Financial Companion</p>
+            <h1 className="text-3xl font-bold mb-1">Pennyverse</h1>
+            <p className="text-sm opacity-90">Smart Savings & Wellness</p>
           </div>
           <Button
             variant="ghost"
@@ -101,32 +114,28 @@ const Dashboard = () => {
       </div>
 
       <div className="container max-w-2xl mx-auto px-6 -mt-8">
-        {/* Balance Card with Transaction Button */}
-        <Card className="mb-6 shadow-lg">
+        {/* Wallet Balance Card */}
+        <Card className="mb-6 shadow-lg bg-gradient-to-br from-card to-card/95">
           <CardContent className="pt-6">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Wallet className="w-8 h-8 text-primary" />
-                  <p className="text-5xl font-bold">Z{balance.toFixed(2)}</p>
-                </div>
-                <Button 
-                  onClick={() => navigate("/transactions")} 
-                  size="sm"
-                >
-                  + Add
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-left">
-                  <p className="text-xs text-muted-foreground">Income</p>
-                  <p className="text-xl font-semibold text-success">+Z{income.toFixed(2)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Expenses</p>
-                  <p className="text-xl font-semibold text-destructive">-Z{expenses.toFixed(2)}</p>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Wallet className="w-10 h-10 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Available Balance</p>
+                  <p className="text-5xl font-bold">₹{walletBalance.toFixed(2)}</p>
                 </div>
               </div>
+              <Button 
+                onClick={() => navigate("/transactions")} 
+                size="lg"
+                className="h-12 px-6"
+              >
+                Receive Money
+              </Button>
+            </div>
+            <div className="pt-3 border-t border-border/50">
+              <p className="text-xs text-muted-foreground">Your UPI ID</p>
+              <p className="text-sm font-mono font-semibold text-primary">{upiId || "Loading..."}</p>
             </div>
           </CardContent>
         </Card>
@@ -146,16 +155,16 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/goals")}>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/vaults")}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Target className="w-4 h-4 text-primary" />
-                <span className="text-primary">Goals</span>
+                <span className="text-primary">Vaults</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{activeGoals}</p>
-              <p className="text-xs text-muted-foreground mt-1">active goals</p>
+              <p className="text-xs text-muted-foreground mt-1">goal vaults</p>
             </CardContent>
           </Card>
         </div>
@@ -197,6 +206,7 @@ const Dashboard = () => {
       </div>
 
       <BottomNav />
+      <FloatingPenny />
     </div>
   );
 };
