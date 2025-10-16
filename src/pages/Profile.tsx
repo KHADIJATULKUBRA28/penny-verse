@@ -13,6 +13,8 @@ const Profile = () => {
   const [userId, setUserId] = useState("");
   const [email, setEmail] = useState("");
   const [createdAt, setCreatedAt] = useState("");
+  const [name, setName] = useState("");
+  const [lastSignIn, setLastSignIn] = useState("");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -25,7 +27,16 @@ const Profile = () => {
       setUserId(session.user.id);
       setEmail(session.user.email || "");
       setCreatedAt(session.user.created_at || "");
+      setName(
+        (session.user.user_metadata?.full_name ||
+          session.user.user_metadata?.name ||
+          session.user.user_metadata?.display_name ||
+          session.user.email?.split("@")[0] ||
+          "") as string
+      );
+      setLastSignIn((session.user.last_sign_in_at as string) || "");
     };
+
 
     checkAuth();
   }, [navigate]);
@@ -74,6 +85,14 @@ const Profile = () => {
             </div>
 
             <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
+              <User className="w-5 h-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-muted-foreground">Name</p>
+                <p className="text-sm">{name || "N/A"}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
               <Mail className="w-5 h-5 text-primary mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-muted-foreground">Email</p>
@@ -91,6 +110,16 @@ const Profile = () => {
                     month: "long",
                     day: "numeric"
                   }) : "N/A"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
+              <Calendar className="w-5 h-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-muted-foreground">Last Sign In</p>
+                <p className="text-sm">
+                  {lastSignIn ? new Date(lastSignIn).toLocaleString() : "N/A"}
                 </p>
               </div>
             </div>

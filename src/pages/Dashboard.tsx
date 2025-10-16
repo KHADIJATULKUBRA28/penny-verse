@@ -104,19 +104,19 @@ const Dashboard = () => {
         {/* Balance Card with Transaction Button */}
         <Card className="mb-6 shadow-lg">
           <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Current Balance</p>
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Wallet className="w-8 h-8 text-primary" />
-                <p className="text-5xl font-bold">Z{balance.toFixed(2)}</p>
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-8 h-8 text-primary" />
+                  <p className="text-5xl font-bold">Z{balance.toFixed(2)}</p>
+                </div>
+                <Button 
+                  onClick={() => navigate("/transactions")} 
+                  size="sm"
+                >
+                  + Add
+                </Button>
               </div>
-              <Button 
-                onClick={() => navigate("/transactions")} 
-                className="w-full mb-4"
-                size="lg"
-              >
-                + Add Transaction
-              </Button>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-left">
                   <p className="text-xs text-muted-foreground">Income</p>
@@ -164,20 +164,18 @@ const Dashboard = () => {
         {categoryBreakdown.length > 0 && (
           <div className="mb-6">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Expense Breakdown</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Expense Breakdown</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {categoryBreakdown.slice(0, 3).map(([category, amount]) => {
                     const total = categoryBreakdown.reduce((sum, [, amt]) => sum + amt, 0);
                     const percentage = ((amount / total) * 100).toFixed(0);
                     return (
-                      <div key={category} className="flex items-center justify-between text-sm">
-                        <span className="font-medium">{category}</span>
-                        <span className="text-muted-foreground">
-                          {percentage}% (Z{amount.toFixed(2)})
-                        </span>
+                      <div key={category} className="flex items-center justify-between text-xs">
+                        <span className="font-medium truncate max-w-[50%]">{category}</span>
+                        <span className="text-muted-foreground">{percentage}%</span>
                       </div>
                     );
                   })}
@@ -185,10 +183,10 @@ const Dashboard = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full mt-2" 
+                      className="w-full mt-1" 
                       onClick={() => navigate("/insights")}
                     >
-                      View All Categories
+                      View All
                     </Button>
                   )}
                 </div>

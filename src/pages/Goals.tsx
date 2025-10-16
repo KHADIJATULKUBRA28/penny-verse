@@ -47,7 +47,7 @@ const Goals = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("rewards")
       .select("streak, points")
       .eq("user_id", user.id)
@@ -56,6 +56,16 @@ const Goals = () => {
     if (data) {
       setStreak(data.streak);
       setPoints(data.points);
+      return;
+    }
+
+    // Ensure a rewards row exists for the user
+    if (!data) {
+      const { error: insertError } = await supabase.from("rewards").insert({ user_id: user.id });
+      if (!insertError) {
+        setStreak(0);
+        setPoints(0);
+      }
     }
   };
 
