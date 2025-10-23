@@ -56,7 +56,7 @@ const ExpensePieChart = ({ categoryBreakdown }: ExpensePieChartProps) => {
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number) => `Z${value.toFixed(2)}`}
+              formatter={(value: number) => `${value.toFixed(2)} PP`}
             />
             <Legend />
           </PieChart>
@@ -72,7 +72,7 @@ const ExpensePieChart = ({ categoryBreakdown }: ExpensePieChartProps) => {
                 <span>{category}</span>
               </div>
               <span className="font-medium">
-                Z{amount.toFixed(2)} ({((amount / total) * 100).toFixed(0)}%)
+                {amount.toFixed(2)} PP ({((amount / total) * 100).toFixed(0)}%)
               </span>
             </div>
           ))}

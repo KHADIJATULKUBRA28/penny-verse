@@ -264,7 +264,7 @@ const Transactions = () => {
                       transaction.type === "income" ? "text-success" : "text-destructive"
                     }`}
                   >
-                    {transaction.type === "income" ? "+" : "-"}Z{transaction.amount.toFixed(2)}
+                    {transaction.type === "income" ? "+" : "-"}{transaction.amount.toFixed(2)} PP
                   </p>
                 </div>
               </CardContent>

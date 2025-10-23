@@ -58,14 +58,14 @@ const Insights = () => {
       const newInsights = [];
       const balance = income - expenses;
       if (balance > 0) {
-        newInsights.push(`You saved Z${balance.toFixed(2)} this period! 🎉`);
+        newInsights.push(`You saved ${balance.toFixed(2)} PP this period! 🎉`);
       } else {
-        newInsights.push(`You spent Z${Math.abs(balance).toFixed(2)} more than you earned.`);
+        newInsights.push(`You spent ${Math.abs(balance).toFixed(2)} PP more than you earned.`);
       }
 
       const topCategory = Object.entries(expensesByCategory).sort((a, b) => b[1] - a[1])[0];
       if (topCategory) {
-        newInsights.push(`Your top spending category is ${topCategory[0]} (Z${topCategory[1].toFixed(2)}).`);
+        newInsights.push(`Your top spending category is ${topCategory[0]} (${topCategory[1].toFixed(2)} PP).`);
       }
 
       setInsights(newInsights);
@@ -86,7 +86,7 @@ const Insights = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-success">Z{totalIncome.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-success">{totalIncome.toFixed(2)} PP</p>
             </CardContent>
           </Card>
 
@@ -98,7 +98,7 @@ const Insights = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-destructive">Z{totalExpenses.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-destructive">{totalExpenses.toFixed(2)} PP</p>
             </CardContent>
           </Card>
         </div>
@@ -112,7 +112,7 @@ const Insights = () => {
           </CardHeader>
           <CardContent>
             <p className={`text-3xl font-bold ${totalIncome - totalExpenses >= 0 ? "text-success" : "text-destructive"}`}>
-              Z{(totalIncome - totalExpenses).toFixed(2)}
+              {(totalIncome - totalExpenses).toFixed(2)} PP
             </p>
           </CardContent>
         </Card>

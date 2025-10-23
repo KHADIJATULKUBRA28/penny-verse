@@ -29,7 +29,7 @@ const TransactionScanner = ({ onTransaction }: TransactionScannerProps) => {
     
     toast({
       title: "Payment Sent! 🎉",
-      description: `Z${amount} sent to ${phoneNumber}`,
+      description: `${amount} PP sent to ${phoneNumber}`,
     });
     
     onTransaction(amount, description || `Payment to ${phoneNumber}`, "expense");
@@ -80,7 +80,7 @@ const TransactionScanner = ({ onTransaction }: TransactionScannerProps) => {
             />
             <Input
               type="number"
-              placeholder="Amount (Zcoins)"
+              placeholder="Amount (PP)"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />

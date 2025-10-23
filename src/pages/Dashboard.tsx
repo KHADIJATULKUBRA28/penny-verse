@@ -132,120 +132,150 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Dialog open={showIncomeDialog} onOpenChange={setShowIncomeDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Welcome to Pennyverse! 🎉</DialogTitle>
+            <DialogTitle className="text-2xl">Welcome to Pennyverse! 🎉</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               To help you manage your savings goals, please tell us your monthly income.
             </p>
             <div>
-              <Label>Monthly Income (PP)</Label>
+              <Label htmlFor="income">Monthly Income (PP)</Label>
               <Input
+                id="income"
                 type="number"
                 placeholder="e.g., 50000"
                 value={incomeInput}
                 onChange={(e) => setIncomeInput(e.target.value)}
+                className="mt-2"
               />
             </div>
-            <Button onClick={handleIncomeSubmit} className="w-full">
+            <Button onClick={handleIncomeSubmit} className="w-full" size="lg">
               Continue
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-secondary text-primary-foreground p-6">
-        <div className="container max-w-2xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-1">Pennyverse</h1>
-            <p className="text-sm opacity-90">Smart Savings & Wellness</p>
+      {/* Header with Gradient */}
+      <div className="relative bg-gradient-to-br from-primary via-primary/90 to-secondary text-primary-foreground p-8 shadow-lg">
+        <div className="container max-w-2xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Pennyverse</h1>
+              <p className="text-sm opacity-90">Smart Savings & Wellness</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20 rounded-full h-12 w-12"
+              onClick={() => navigate("/profile")}
+            >
+              <User className="w-6 h-6" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/20"
-            onClick={() => navigate("/profile")}
-          >
-            <User className="w-6 h-6" />
-          </Button>
+
+          {/* Wallet Balance Card - Elevated Design */}
+          <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <Wallet className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Available Balance</p>
+                    <p className="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                      {walletBalance.toFixed(2)}
+                    </p>
+                    <p className="text-sm font-medium text-primary mt-1">PP</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigate("/transactions")} 
+                  size="lg"
+                  className="h-14 px-8 shadow-lg hover:shadow-xl transition-all"
+                >
+                  Receive Money
+                </Button>
+              </div>
+              <div className="pt-4 border-t border-border/50">
+                <p className="text-xs text-muted-foreground mb-1">Your UPI ID</p>
+                <p className="text-sm font-mono font-semibold text-primary">{upiId || "Loading..."}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      <div className="container max-w-2xl mx-auto px-6 -mt-8">
-        {/* Wallet Balance Card */}
-        <Card className="mb-6 shadow-lg bg-gradient-to-br from-card to-card/95">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Wallet className="w-10 h-10 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Available Balance</p>
-                  <p className="text-5xl font-bold">{walletBalance.toFixed(2)} PP</p>
-                </div>
-              </div>
-              <Button 
-                onClick={() => navigate("/transactions")} 
-                size="lg"
-                className="h-12 px-6"
-              >
-                Receive Money
-              </Button>
-            </div>
-            <div className="pt-3 border-t border-border/50">
-              <p className="text-xs text-muted-foreground">Your UPI ID</p>
-              <p className="text-sm font-mono font-semibold text-primary">{upiId || "Loading..."}</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container max-w-2xl mx-auto px-6 -mt-4">{/* Rest of dashboard content */}
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Enhanced Cards */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/goals")}>
+          <Card className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-l-4 border-l-warning" onClick={() => navigate("/goals")}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-warning" />
+                <div className="p-2 rounded-lg bg-warning/10">
+                  <Trophy className="w-5 h-5 text-warning" />
+                </div>
                 <span className="text-warning">Streak</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{streak}</p>
-              <p className="text-xs text-muted-foreground mt-1">{points} points</p>
+              <p className="text-4xl font-bold">{streak}</p>
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-full bg-warning animate-pulse"></span>
+                {points} points
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/vaults")}>
+          <Card className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-l-4 border-l-primary" onClick={() => navigate("/vaults")}>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Target className="w-5 h-5 text-primary" />
+                </div>
                 <span className="text-primary">Vaults</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{activeGoals}</p>
-              <p className="text-xs text-muted-foreground mt-1">goal vaults</p>
+              <p className="text-4xl font-bold">{activeGoals}</p>
+              <p className="text-xs text-muted-foreground mt-2">active goal vaults</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Pie Chart - Minimized */}
+        {/* Expense Breakdown - Refined */}
         {categoryBreakdown.length > 0 && (
           <div className="mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Expense Breakdown</CardTitle>
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-accent/10">
+                    <span className="text-lg">📊</span>
+                  </div>
+                  Expense Breakdown
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {categoryBreakdown.slice(0, 3).map(([category, amount]) => {
                     const total = categoryBreakdown.reduce((sum, [, amt]) => sum + amt, 0);
                     const percentage = ((amount / total) * 100).toFixed(0);
                     return (
-                      <div key={category} className="flex items-center justify-between text-xs">
+                      <div key={category} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                         <span className="font-medium truncate max-w-[50%]">{category}</span>
-                        <span className="text-muted-foreground">{percentage}%</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-muted-foreground min-w-[3ch] text-right">{percentage}%</span>
+                        </div>
                       </div>
                     );
                   })}
@@ -253,10 +283,10 @@ const Dashboard = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full mt-1" 
+                      className="w-full mt-2 hover:bg-primary/10" 
                       onClick={() => navigate("/insights")}
                     >
-                      View All
+                      View All →
                     </Button>
                   )}
                 </div>

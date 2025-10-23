@@ -96,17 +96,6 @@ const Vaults = () => {
       return;
     }
 
-    // Check 20% income limit
-    const maxGoalAmount = monthlyIncome * 0.2;
-    if (targetAmount > maxGoalAmount) {
-      toast({ 
-        title: "Goal amount too high", 
-        description: `You can only save up to 20% of your monthly income (${Math.floor(maxGoalAmount)} PP) per goal`,
-        variant: "destructive" 
-      });
-      return;
-    }
-
     const { error } = await supabase.from("goal_vaults").insert({
       user_id: user.id,
       goal_name: newVault.goal_name,

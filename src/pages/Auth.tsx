@@ -71,8 +71,8 @@ const Auth = () => {
           <div className="flex items-center justify-center gap-3 mb-4">
             <Wallet className="w-10 h-10 text-primary" />
             <div>
-              <CardTitle className="text-3xl">FinTrack</CardTitle>
-              <CardDescription>Smart Money Management</CardDescription>
+              <CardTitle className="text-3xl">Pennyverse</CardTitle>
+              <CardDescription>Smart Savings & Wellness</CardDescription>
             </div>
           </div>
         </CardHeader>
