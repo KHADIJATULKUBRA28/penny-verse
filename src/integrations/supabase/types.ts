@@ -67,6 +67,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          monthly_income: number | null
           name: string | null
           updated_at: string
           upi_id: string | null
@@ -76,6 +77,7 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          monthly_income?: number | null
           name?: string | null
           updated_at?: string
           upi_id?: string | null
@@ -85,6 +87,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          monthly_income?: number | null
           name?: string | null
           updated_at?: string
           upi_id?: string | null
@@ -96,6 +99,7 @@ export type Database = {
         Row: {
           id: string
           last_update: string
+          lifetime_points: number | null
           points: number
           streak: number
           user_id: string
@@ -103,6 +107,7 @@ export type Database = {
         Insert: {
           id?: string
           last_update?: string
+          lifetime_points?: number | null
           points?: number
           streak?: number
           user_id: string
@@ -110,6 +115,7 @@ export type Database = {
         Update: {
           id?: string
           last_update?: string
+          lifetime_points?: number | null
           points?: number
           streak?: number
           user_id?: string

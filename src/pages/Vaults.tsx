@@ -29,6 +29,7 @@ const Vaults = () => {
   const { toast } = useToast();
   const [vaults, setVaults] = useState<GoalVault[]>([]);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newVault, setNewVault] = useState({
     goal_name: "",
@@ -73,12 +74,13 @@ const Vaults = () => {
 
     const { data } = await supabase
       .from("profiles")
-      .select("wallet_balance")
+      .select("wallet_balance, monthly_income")
       .eq("id", user.id)
       .single();
 
     if (data) {
       setWalletBalance(data.wallet_balance || 0);
+      setMonthlyIncome(data.monthly_income || 0);
     }
   };
 
@@ -91,6 +93,17 @@ const Vaults = () => {
 
     if (!newVault.goal_name || targetAmount <= 0 || dailyAmount <= 0) {
       toast({ title: "Please fill all fields with valid values", variant: "destructive" });
+      return;
+    }
+
+    // Check 20% income limit
+    const maxGoalAmount = monthlyIncome * 0.2;
+    if (targetAmount > maxGoalAmount) {
+      toast({ 
+        title: "Goal amount too high", 
+        description: `You can only save up to 20% of your monthly income (${Math.floor(maxGoalAmount)} PP) per goal`,
+        variant: "destructive" 
+      });
       return;
     }
 
@@ -141,7 +154,30 @@ const Vaults = () => {
       .eq("id", user.id);
 
     if (!vaultError && !profileError) {
-      toast({ title: `₹${amount} saved to ${vault.goal_name}! 💪`, description: `Streak: ${vault.streak_days + 1} days 🔥` });
+      // Award bonus points for streaks
+      const streakBonus = Math.floor((vault.streak_days + 1) / 7) * 10; // 10 points per week
+      if (streakBonus > 0) {
+        const { data: rewardsData } = await supabase
+          .from("rewards")
+          .select("points, lifetime_points")
+          .eq("user_id", user.id)
+          .single();
+
+        if (rewardsData) {
+          await supabase
+            .from("rewards")
+            .update({
+              points: rewardsData.points + streakBonus,
+              lifetime_points: (rewardsData.lifetime_points || 0) + streakBonus
+            })
+            .eq("user_id", user.id);
+        }
+      }
+
+      toast({ 
+        title: `${amount} PP saved to ${vault.goal_name}! 💪`, 
+        description: `Streak: ${vault.streak_days + 1} days 🔥${streakBonus > 0 ? ` +${streakBonus} bonus points!` : ''}` 
+      });
       fetchVaults();
       fetchWalletBalance();
     }
@@ -173,7 +209,7 @@ const Vaults = () => {
     if (!vaultError && !profileError) {
       toast({
         title: "Vault Broken 💔",
-        description: `₹${vault.saved_amount} returned to wallet. Progress lost.`,
+        description: `${vault.saved_amount} PP returned to wallet. Progress lost.`,
         variant: "destructive"
       });
       fetchVaults();
@@ -210,16 +246,19 @@ const Vaults = () => {
                   />
                 </div>
                 <div>
-                  <Label>Target Amount (₹)</Label>
+                  <Label>Target Amount (PP)</Label>
                   <Input
                     type="number"
-                    placeholder="50000"
+                    placeholder="10000"
                     value={newVault.target_amount}
                     onChange={(e) => setNewVault({ ...newVault, target_amount: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Max: {Math.floor(monthlyIncome * 0.2)} PP (20% of monthly income)
+                  </p>
                 </div>
                 <div>
-                  <Label>Daily Save Amount (₹)</Label>
+                  <Label>Daily Save Amount (PP)</Label>
                   <Input
                     type="number"
                     placeholder="100"
@@ -281,7 +320,7 @@ const Vaults = () => {
                   <div>
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Progress</span>
-                      <span className="font-semibold">₹{vault.saved_amount} / ₹{vault.target_amount}</span>
+                      <span className="font-semibold">{vault.saved_amount} PP / {vault.target_amount} PP</span>
                     </div>
                     <Progress value={progress} className="h-3" />
                     <p className="text-xs text-muted-foreground mt-1">
@@ -295,7 +334,7 @@ const Vaults = () => {
                       className="flex-1"
                       disabled={walletBalance < vault.daily_save_amount}
                     >
-                      Save Today (₹{vault.daily_save_amount})
+                      Save Today ({vault.daily_save_amount} PP)
                     </Button>
 
                     <AlertDialog>
@@ -308,7 +347,7 @@ const Vaults = () => {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Break Vault?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will unlock ₹{vault.saved_amount} and return it to your wallet, but you'll lose all progress, rewards, and your {vault.streak_days}-day streak.
+                            This will unlock {vault.saved_amount} PP and return it to your wallet, but you'll lose all progress, rewards, and your {vault.streak_days}-day streak.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

@@ -133,7 +133,7 @@ const SavingsGoal = ({ goals, onAddGoal, onDeleteGoal, onUpdateGoal }: SavingsGo
                 />
                 <Input
                   type="number"
-                  placeholder="Target amount (Zcoins)"
+                  placeholder="Target amount (Penny Points)"
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
                 />
@@ -189,7 +189,7 @@ const SavingsGoal = ({ goals, onAddGoal, onDeleteGoal, onUpdateGoal }: SavingsGo
                       <div>
                         <h4 className="font-semibold">{goal.title}</h4>
                         <p className="text-xs text-muted-foreground">
-                          {daysLeft} days left · Save Z{dailySavings}/day
+                          {daysLeft} days left · Save {dailySavings} PP/day
                         </p>
                       </div>
                     </div>
@@ -203,10 +203,10 @@ const SavingsGoal = ({ goals, onAddGoal, onDeleteGoal, onUpdateGoal }: SavingsGo
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">Z{goal.current_amount.toFixed(2)}</span>
-                      <span className="text-muted-foreground">Z{goal.target_amount.toFixed(2)}</span>
-                    </div>
+            <div className="flex justify-between text-sm">
+              <span className="font-medium">{goal.current_amount.toFixed(2)} PP</span>
+              <span className="text-muted-foreground">{goal.target_amount.toFixed(2)} PP</span>
+            </div>
                     <Progress value={progress} className="h-3" />
                     <p className="text-xs font-medium text-center">{progress.toFixed(0)}%</p>
                   </div>

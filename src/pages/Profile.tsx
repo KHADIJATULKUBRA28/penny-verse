@@ -40,7 +40,7 @@ const Profile = () => {
       // Fetch profile data
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("*")
+        .select("name, email, upi_id, wallet_balance, monthly_income")
         .eq("id", session.user.id)
         .single();
 
@@ -101,7 +101,15 @@ const Profile = () => {
               <Wallet className="w-5 h-5 text-success mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-muted-foreground">Available Balance</p>
-                <p className="text-3xl font-bold text-success">₹{profile?.wallet_balance?.toFixed(2) || "0.00"}</p>
+                <p className="text-3xl font-bold text-success">{profile?.wallet_balance?.toFixed(2) || "0.00"} PP</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-card">
+              <Wallet className="w-5 h-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-muted-foreground">Monthly Income</p>
+                <p className="text-2xl font-bold">{profile?.monthly_income?.toFixed(0) || "0"} PP</p>
               </div>
             </div>
           </CardContent>

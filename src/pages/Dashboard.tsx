@@ -3,12 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { Wallet, Trophy, Target, User } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import FloatingPenny from "@/components/FloatingPenny";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [walletBalance, setWalletBalance] = useState(0);
   const [upiId, setUpiId] = useState("");
   const [income, setIncome] = useState(0);
@@ -17,6 +22,9 @@ const Dashboard = () => {
   const [points, setPoints] = useState(0);
   const [categoryBreakdown, setCategoryBreakdown] = useState<[string, number][]>([]);
   const [activeGoals, setActiveGoals] = useState(0);
+  const [monthlyIncome, setMonthlyIncome] = useState(0);
+  const [showIncomeDialog, setShowIncomeDialog] = useState(false);
+  const [incomeInput, setIncomeInput] = useState("");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,13 +43,19 @@ const Dashboard = () => {
     // Fetch profile with wallet balance and UPI ID
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("wallet_balance, upi_id")
+      .select("wallet_balance, upi_id, monthly_income")
       .eq("id", userId)
       .single();
 
     if (profileData) {
       setWalletBalance(profileData.wallet_balance || 0);
       setUpiId(profileData.upi_id || "");
+      setMonthlyIncome(profileData.monthly_income || 0);
+      
+      // Show income dialog if not set
+      if (!profileData.monthly_income || profileData.monthly_income === 0) {
+        setShowIncomeDialog(true);
+      }
     }
 
     // Fetch transactions
@@ -93,8 +107,55 @@ const Dashboard = () => {
     setActiveGoals(vaultsData?.length || 0);
   };
 
+  const handleIncomeSubmit = async () => {
+    const income = parseFloat(incomeInput);
+    if (!income || income <= 0) {
+      toast({ title: "Please enter a valid income amount", variant: "destructive" });
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ monthly_income: income })
+      .eq("id", user.id);
+
+    if (!error) {
+      setMonthlyIncome(income);
+      setShowIncomeDialog(false);
+      toast({ title: "Monthly income saved! 🎉" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
+      <Dialog open={showIncomeDialog} onOpenChange={setShowIncomeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Welcome to Pennyverse! 🎉</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              To help you manage your savings goals, please tell us your monthly income.
+            </p>
+            <div>
+              <Label>Monthly Income (PP)</Label>
+              <Input
+                type="number"
+                placeholder="e.g., 50000"
+                value={incomeInput}
+                onChange={(e) => setIncomeInput(e.target.value)}
+              />
+            </div>
+            <Button onClick={handleIncomeSubmit} className="w-full">
+              Continue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-secondary text-primary-foreground p-6">
         <div className="container max-w-2xl mx-auto flex items-center justify-between">
@@ -122,7 +183,7 @@ const Dashboard = () => {
                 <Wallet className="w-10 h-10 text-primary" />
                 <div>
                   <p className="text-xs text-muted-foreground">Available Balance</p>
-                  <p className="text-5xl font-bold">₹{walletBalance.toFixed(2)}</p>
+                  <p className="text-5xl font-bold">{walletBalance.toFixed(2)} PP</p>
                 </div>
               </div>
               <Button 

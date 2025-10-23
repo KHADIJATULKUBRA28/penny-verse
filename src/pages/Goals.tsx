@@ -117,7 +117,7 @@ const Goals = () => {
     if (!error) {
       toast({ 
         title: "Progress updated! 💪",
-        description: `Added Z${addedAmount} to ${goal.title}`
+        description: `Added ${addedAmount} PP to ${goal.title}`
       });
       fetchGoals();
     }
