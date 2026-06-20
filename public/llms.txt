@@ -1,0 +1,10 @@
+# Pennyverse
+
+> Smart savings and financial wellness app — track expenses, build savings goal vaults, and get AI-powered financial coaching.
+
+Pennyverse helps users save daily, lock money into goal vaults, track spending by category, and get personalized AI insights.
+
+## Pages
+
+- [Home](/): Wallet balance, daily savings streak, and spending overview.
+- [Sign in](/auth): Log in or create a Pennyverse account.

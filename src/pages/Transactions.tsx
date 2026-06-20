@@ -170,7 +170,7 @@ const Transactions = () => {
           <h1 className="text-3xl font-bold">Transactions</h1>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button size="icon" className="rounded-full h-14 w-14 shadow-lg">
+              <Button size="icon" aria-label="Add transaction" className="rounded-full h-14 w-14 shadow-lg">
                 <Plus className="h-6 w-6" />
               </Button>
             </DialogTrigger>
