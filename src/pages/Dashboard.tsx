@@ -163,12 +163,13 @@ const Dashboard = () => {
         <div className="container max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold mb-2">Pennyverse</h1>
-              <p className="text-sm opacity-90">Smart Savings & Wellness</p>
+              <h1 className="text-4xl font-bold mb-2">Pennyverse — Smart Savings &amp; Financial Wellness</h1>
+              <p className="text-sm opacity-90">Smart Savings &amp; Wellness</p>
             </div>
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Open profile"
               className="text-white hover:bg-white/20 rounded-full h-12 w-12"
               onClick={() => navigate("/profile")}
             >
@@ -176,6 +177,7 @@ const Dashboard = () => {
             </Button>
           </div>
 
+          <h2 className="sr-only">Your Wallet</h2>
           {/* Wallet Balance Card - Elevated Design */}
           <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur">
             <CardContent className="pt-6">
@@ -209,7 +211,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="container max-w-2xl mx-auto px-6 -mt-4">{/* Rest of dashboard content */}
+      <div className="container max-w-2xl mx-auto px-6 -mt-4">
+        <h2 className="sr-only">Spending Insights</h2>{/* Rest of dashboard content */}
 
         {/* Quick Stats - Enhanced Cards */}
         <div className="grid grid-cols-2 gap-4 mb-6">
