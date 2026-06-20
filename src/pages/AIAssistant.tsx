@@ -116,7 +116,7 @@ const AIAssistant = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && sendMessage()}
           />
-          <Button onClick={sendMessage} disabled={isLoading} size="icon">
+          <Button onClick={sendMessage} disabled={isLoading} size="icon" aria-label="Send message">
             <Send className="h-4 w-4" />
           </Button>
         </div>

@@ -328,7 +328,7 @@ const Vaults = () => {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon">
+                        <Button variant="destructive" size="icon" aria-label="Break vault">
                           <AlertTriangle className="w-4 h-4" />
                         </Button>
                       </AlertDialogTrigger>
